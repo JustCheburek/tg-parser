@@ -49,4 +49,4 @@ The first time you start the application, MongoDB will run in a Docker container
 To connect to the database from another application, use the following connection string:
 `mongodb://root:toor@localhost:27017/myDatabase?authSource=admin&directConnection=true&replicaSet=rs0`
 
-To review the database records, you can use Prism Studio. Start it by executing `pnpm db:studio` from the terminal (run the command from the root directory of the repository).
+To review the database records, you can use Prisma Studio. Start it by executing `pnpm db:studio` from the terminal (run the command from the root directory of the repository).
