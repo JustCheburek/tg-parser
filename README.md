@@ -1,10 +1,10 @@
 # Telegram Channel Parser
 
-Download messages from public Telegram channels.
+This project allows you to download messages from public Telegram channels.
 
 ## Setup
 
-Clone the repository of the project and execute the following commands:
+To set up the project, clone the repository and run the following commands:
 
 ```bash
 pnpm install
@@ -13,20 +13,19 @@ cp ./.env-example ./.env
 
 ## Prerequisites
 
-- Node.js LTS
-- [`docker`](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-22-04) with [`compose`](https://docs.docker.com/compose/install/linux/) plugin
+- Node.js LTS version
+- [`Docker`](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-22-04) with the [`Compose`](https://docs.docker.com/compose/install/linux/) plugin
 
 ## Configuration
 
-1. Head over the https://my.telegram.org/auth?to=apps and create a developer account.
-Get `API_ID` and `API_HASH` there and copy them to the `./env`.
-2. Copy a Telegram channel name to `CHANNEL_USERNAME` of the `./env`.
-3. You can configure the `MSG_LIMIT` option as big as you want but usually API will return you not more than 100 records at once
-4. Not recommended to set the `MSG_FETCH_DELAY` less than 1000 (1sec) because it may cause your application to be blocked (or not, you can try).
+1. Go to https://my.telegram.org/auth?to=apps and create a developer account. Obtain your `API_ID` and `API_HASH` from there and add them to the `.env` file.
+2. Enter a Telegram channel name as the `CHANNEL_USERNAME` in the `.env` file.
+3. The `MSG_LIMIT` parameter can be set as high as you wish, but typically the API will not return more than 100 records at a time.
+4. It's not recommended to set the `MSG_FETCH_DELAY` lower than 1000 (1 sec) to avoid the risk of having your application blocked (though, you can experiment).
 
-## Start
+## Starting the Application
 
-> Always start the database prior to the application start
+> Always start the database before starting the application.
 
 ```bash
 pnpm db:start
@@ -35,17 +34,19 @@ pnpm start:dev
 
 ## Authorization
 
-When the application is started it will prompt you to enter your phone number and then the authorization code (arrived at your Telegram app).
+Upon starting the application, you'll be prompted to enter your phone number and then the authorization code sent to your Telegram app.
 
 ## Shutdown
 
-- CTRL + C
-- `pnpm db:stop`
+To shut down the application:
+- Use CTRL + C in the terminal.
+- Stop the database with `pnpm db:stop`.
 
 ## Database
 
-When you start the application the very first time, the MongoDB will be started in the `docker` container and its volume will be created in the root repository folder. This volume will be persisted between the application restarts.
+The first time you start the application, MongoDB will run in a Docker container, and its volume will be created in the root directory of the repository. This volume is persistent across application restarts.
 
-If you want to connect the database from another application you can use the following connection string: `mongodb://root:toor@localhost:27017/myDatabase?authSource=admin&directConnection=true&replicaSet=rs0`
+To connect to the database from another application, use the following connection string:
+`mongodb://root:toor@localhost:27017/myDatabase?authSource=admin&directConnection=true&replicaSet=rs0`
 
-If you want to review the database records you can use the Prism Studio application. To start it just execute the `pnpm db:studio` from a console (run the command from the root of the repository directory).
+To review the database records, you can use Prism Studio. Start it by executing `pnpm db:studio` from the terminal (run the command from the root directory of the repository).
