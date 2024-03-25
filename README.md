@@ -21,7 +21,7 @@ cp ./.env-example ./.env
 1. Head over the https://my.telegram.org/auth?to=apps and create a developer account.
 Get `API_ID` and `API_HASH` there and copy them to the `./env`.
 2. Copy a Telegram channel name to `CHANNEL_USERNAME` of the `./env`.
-3. You can configure the `MSG_LIMIT` option as much as you want but usually API will return you not more than 100 records at once
+3. You can configure the `MSG_LIMIT` option as big as you want but usually API will return you not more than 100 records at once
 4. Not recommended to set the `MSG_FETCH_DELAY` less than 1000 (1sec) because it may cause your application to be blocked (or not, you can try).
 
 ## Start
