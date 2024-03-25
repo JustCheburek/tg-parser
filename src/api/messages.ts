@@ -1,5 +1,5 @@
 import { TelegramClient } from 'telegram';
-import { Api } from 'telegram/tl';
+import { Api } from 'telegram/tl/index.js';
 import { delay } from '../utils/common.js';
 import {
   messagesLimit, // The maximum number of messages to fetch in one call
@@ -7,8 +7,11 @@ import {
   justTry, // Flag to determine if only one fetch cycle should be attempted
   channelUsername, // The username of the channel to fetch messages from
 } from '../config.js';
-import { getCycle, saveCycle } from '../db/fetchCycle.js'; // DB functions for managing fetch cycles
-import { parseTelegramMessage, saveMessageMany } from '../db/messages.js'; // DB functions for message handling
+import { getCycle, saveCycle } from '../db/fetchCycle.js';
+import { parseTelegramMessage, saveMessageMany } from '../db/messages.js';
+import { createLogger } from '../utils/logger.js';
+
+const logger = createLogger('MessagesApi');
 
 /**
  * Fetches all messages from a given Telegram channel and stores them in a database.
@@ -41,12 +44,12 @@ export const fetchAllMessages = async (
 
     // If no messages are returned, we've reached the end of the channel's history
     if (messages.length === 0) {
-      console.log('Done fetching all messages.');
+      logger.trace('Done fetching all messages.');
       break; // Break the loop to stop fetching
     }
 
     // Log the details of the fetched messages for debugging purposes
-    console.log(
+    logger.trace(
       `Messages fetched: [from: ${messages[0].id}, to: ${messages[messages.length - 1].id}, messages: ${messages.length}]`,
     );
 
@@ -63,7 +66,7 @@ export const fetchAllMessages = async (
 
     // Save the new offset ID to the database for the next fetch cycle
     await saveCycle(channelUsername, offsetId);
-    console.log(`Next cycle on ${channelUsername}. Offset: ${offsetId}`);
+    logger.trace(`Next cycle on ${channelUsername}. Offset: ${offsetId}`);
 
     // Wait for a specified delay to avoid hitting rate limits
     await delay(fetchDelay);

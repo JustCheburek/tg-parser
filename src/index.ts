@@ -1,18 +1,21 @@
 /* eslint-disable @typescript-eslint/require-await */
 import { TelegramClient } from 'telegram';
-import { StringSession } from 'telegram/sessions';
+import { StringSession } from 'telegram/sessions/index.js';
 import { apiId, apiHash } from './config.js';
 import { getSession, saveSession } from './db/session.js';
 import { prisma } from './db/index.js';
 import { fetchAllMessages } from './api/messages.js';
 import { prompt } from './utils/input.js';
+import { createLogger } from './utils/logger.js';
+
+const logger = createLogger('ParserMain');
 
 /**
  * The main function orchestrates the setup and execution of the Telegram client,
  * handles user authentication, and triggers the message fetching process.
  */
 const main = async (): Promise<void> => {
-  console.log('Starting...');
+  logger.trace('Starting...');
 
   // Initialize the Telegram client with a saved session, if available
   const stringSession = new StringSession(await getSession());
@@ -31,7 +34,7 @@ const main = async (): Promise<void> => {
     }
   } catch (err) {
     // Handle connection and authorization errors
-    console.log(
+    logger.error(
       'Login required:',
       (err as Error).message ?? 'Unknown connection error',
     );
@@ -40,14 +43,14 @@ const main = async (): Promise<void> => {
     await client.start({
       phoneNumber: () => prompt('Enter your phone number: '),
       phoneCode: () => prompt('Enter code: '),
-      onError: (err: Error) => console.error(err),
+      onError: (err: Error) => logger.error(err),
     });
-    console.log('Successfully logged in.');
+    logger.trace('Successfully logged in.');
   }
 
   // Save the session string for future connections
   await saveSession(stringSession.save());
-  console.log('Session updated.');
+  logger.trace('Session updated.');
 
   // Proceed to fetch all messages from the configured Telegram channel
   await fetchAllMessages(client);
@@ -66,7 +69,7 @@ const shutdown = (isError: boolean = false) => {
     await prisma.$disconnect(); // Ensure Prisma client disconnects
   };
   stopHandler()
-    .catch(console.error)
+    .catch(logger.error)
     .finally(() => process.exit(isError ? 1 : 0)); // Exit the process, indicating error if any
 };
 
@@ -74,7 +77,7 @@ const shutdown = (isError: boolean = false) => {
 process.once('SIGTERM', () => shutdown());
 process.once('SIGINT', () => shutdown());
 process.once('unhandledRejection', (error) => {
-  console.error('🛸 Unhandled rejection', error);
+  logger.error('🛸 Unhandled rejection', error);
   shutdown(true);
 });
 
@@ -82,6 +85,6 @@ process.once('unhandledRejection', (error) => {
 main()
   .then(() => shutdown())
   .catch((error) => {
-    console.error('🚨 Internal application error', error);
+    logger.error('🚨 Internal application error', error);
     shutdown(true);
   });

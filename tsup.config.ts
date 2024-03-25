@@ -13,7 +13,7 @@ export default defineConfig([
     sourcemap: false,
     splitting: false,
     clean: true,
-    format: ['cjs'],
+    format: ['esm'],
     external: Object.keys(dependencies),
   },
 ]);

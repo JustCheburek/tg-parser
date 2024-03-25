@@ -15,7 +15,7 @@
     "lint": "prettier --ignore-path ./.lintignore . '!data' --check && eslint . --ext .ts --ignore-path ./.lintignore",
     "lint:fix": "prettier --ignore-path ./.lintignore --write . '!data' --check && eslint . --ext .ts --ignore-path ./.lintignore --fix",
     "build": "tsup",
-    "start": "node ./dist/index.js",
+    "start": "node --experimental-specifier-resolution=node ./dist/index.js",
     "start:dev": "node --experimental-specifier-resolution=node --loader ts-node/esm src/index.ts",
     "db:key": "./scripts/keyfile.sh",
     "db:start": "pnpm db:key && docker compose up -d",
@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.26",
+    "@types/debug": "^4.1.12",
     "typescript": "^5.4.2",
     "tsup": "^8.0.2",
     "ts-node": "^10.9.2",
@@ -42,6 +43,7 @@
   "dependencies": {
     "telegram": "^2.20.2",
     "dotenv": "16.4.5",
+    "debug": "^4.3.4",
     "prisma": "^5.11.0",
     "@prisma/client": "^5.11.0"
   }
