@@ -39,6 +39,7 @@ Upon starting the application, you'll be prompted to enter your phone number and
 ## Shutdown
 
 To shut down the application:
+
 - Use CTRL + C in the terminal.
 - Stop the database with `pnpm db:stop`.
 

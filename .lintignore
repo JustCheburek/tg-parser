@@ -7,3 +7,4 @@ coverage
 typedoc
 temp
 pnpm-lock.yaml
+data
