@@ -1,0 +1,24 @@
+services:
+  mongo:
+    container_name: tg_parser_mongo
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    command: ["--replSet", "rs0", "--bind_ip_all", "--keyFile", "/data/configdb/mongodb-keyfile", "--port", "27017"]
+    restart: on-failure
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: toor
+    volumes:
+      - ./data/db:/data/db
+      - ./data/config:/data/configdb
+    healthcheck:
+      test: |
+        test $$(mongosh --port 27017 --quiet -u root -p toor --eval "try { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'host.docker.internal:27017' }] }).ok } catch (_) { rs.status().ok }") -eq 1
+      start_period: 0s
+      start_interval: 1s
+      interval: 5s
+      timeout: 10s
+      retries: 30

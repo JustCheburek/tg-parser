@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionString String
+  createdAt     DateTime @default(now())
+}
+
+model FetchCycle {
+  id            String @id @default(auto()) @map("_id") @db.ObjectId
+  channel       String @unique
+  offsetId      Int @default(0)
+  createdAt     DateTime @default(now())
+}
+
+model Message {
+  id            String @id @default(auto()) @map("_id") @db.ObjectId
+  channelId     String // Channel identifier
+  messageId     Int // Message identifier in Telegram
+  date          Int? // Message creation date
+  message       String? // Message text
+  replyToMsgId  Int? // ID of the message being replied to (optional)
+  attachments   String[] // mediaId's of attached files
+  replies       Int? // Number of replies to the message (optional)
+
+  @@unique([channelId, messageId], name: "channelMessage")
+}
+
+enum AttachmentType {
+  NONE
+  PHOTO
+  DOCUMENT
+  WEBPAGE
+}
+
+model Attachment {
+  id            String @id @default(auto()) @map("_id") @db.ObjectId
+  mediaId       String // Media file identifier
+  type          AttachmentType @default(NONE) // Media type
+  mimeType      String? // Media mime type
+}
+
