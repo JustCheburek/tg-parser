@@ -25,7 +25,7 @@
     "db:console": "docker exec -it tg_parser_mongo mongosh -u \"root\" -p \"toor\" --authenticationDatabase \"admin\"",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "prisma:studio": "prisma db studio"
+    "prisma:studio": "prisma studio"
   },
   "devDependencies": {
     "@types/node": "^20.11.26",
