@@ -59,7 +59,9 @@ export const fetchAllMessages = async (
     }
 
     // Save the fetched messages to the database after processing
-    await saveMessageMany(messages.map((m) => parseTelegramMessage(m)));
+    await saveMessageMany(
+      messages.map((m) => parseTelegramMessage(m, channelUsername)),
+    );
 
     // Update the offset ID to the smallest message ID from the fetched batch for the next cycle
     offsetId = Math.min(...messages.map((m) => m.id));

@@ -56,6 +56,18 @@ To review the database records, you can use Prisma Studio. Start it by executing
 
 ### How to get channel data by `channelId`
 
+> May not work for some channels
+
 ```typescript
 const channel = await client.getEntity(`-100${channelId}`)
+```
+
+### How to get channel by `channelName`
+
+```typescript
+const channels = await client.invoke(
+  new Api.channels.GetChannels({
+    id: ['channelName'],
+  }),
+);
 ```

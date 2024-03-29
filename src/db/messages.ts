@@ -17,11 +17,13 @@ export type MessageInput = Omit<Message, 'id'> & {
  * for insertion into the database.
  *
  * @param {Api.Message} telegramMessage - The Telegram message object to be parsed.
+ * @param {string} channelName - Channel username
  * @returns {MessageInput} A structured representation of the message, including attachments,
  * ready for database insertion.
  */
 export const parseTelegramMessage = (
   telegramMessage: Api.Message,
+  channelName: string,
 ): MessageInput => {
   const attachmentsInput: AttachmentInput[] = [];
 
@@ -63,6 +65,7 @@ export const parseTelegramMessage = (
   // Return a structured object representing the message and its attachments
   return {
     channelId: (telegramMessage.peerId as Api.PeerChannel).channelId.toString(),
+    channelName,
     messageId: telegramMessage.id,
     date: telegramMessage.date ?? null,
     message: telegramMessage.message ?? null,
@@ -82,6 +85,7 @@ export const parseTelegramMessage = (
  */
 export const saveMessage = async ({
   channelId,
+  channelName,
   messageId,
   date,
   message,
@@ -106,6 +110,7 @@ export const saveMessage = async ({
       update: { date, message, replyToMsgId, attachments, replies },
       create: {
         channelId,
+        channelName,
         messageId,
         date,
         message,

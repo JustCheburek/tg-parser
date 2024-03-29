@@ -29,6 +29,7 @@ model FetchCycle {
 model Message {
   id            String @id @default(auto()) @map("_id") @db.ObjectId
   channelId     String // Channel identifier
+  channelName   String // Channel name
   messageId     Int // Message identifier in Telegram
   date          Int? // Message creation date
   message       String? // Message text
