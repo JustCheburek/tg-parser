@@ -51,3 +51,11 @@ To connect to the database from another application, use the following connectio
 `mongodb://root:toor@localhost:27017/myDatabase?authSource=admin&directConnection=true&replicaSet=rs0`
 
 To review the database records, you can use Prisma Studio. Start it by executing `pnpm prisma:studio` from the terminal (run the command from the root directory of the repository).
+
+## FAQ
+
+### How to get channel data by `channelId`
+
+```typescript
+const channel = await client.getEntity(`-100${channelId}`)
+```
