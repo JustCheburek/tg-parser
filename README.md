@@ -1,68 +1,83 @@
-# Telegram Channel Parser
+# Telegram Channel Parser (Console Mode)
 
-This project allows you to download messages from public Telegram channels.
+Этот проект позволяет загружать и отображать сообщения из публичных Telegram каналов в консоли, а также сохранять их в единый JSON-файл (output/messages.json).
 
-## Setup
+## Установка
 
-To set up the project, clone the repository and run the following commands:
+Для установки проекта клонируйте репозиторий и выполните следующие команды:
 
 ```bash
 pnpm install
 cp ./.env-example ./.env
 ```
 
-## Prerequisites
+## Требования
 
-- Node.js LTS version
-- [`Docker`](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-22-04) with the [`Compose`](https://docs.docker.com/compose/install/linux/) plugin
+- Node.js LTS
+- Учетная запись Telegram
 
-## Configuration
+## Конфигурация
 
-1. Go to https://my.telegram.org/auth?to=apps and create a developer account. Obtain your `API_ID` and `API_HASH` from there and add them to the `.env` file.
-2. Enter a Telegram channel name as the `CHANNEL_USERNAME` in the `.env` file.
-3. The `MSG_LIMIT` parameter can be set as high as you wish, but typically the API will not return more than 100 records at a time.
-4. It's not recommended to set the `MSG_FETCH_DELAY` lower than 1000 (1 sec) to avoid the risk of having your application blocked (though, you can experiment).
+В файле `.env` должны быть указаны параметры для авторизации пользователя:
 
-## Starting the Application
-
-> Always start the database before starting the application.
-
-```bash
-pnpm db:start
-pnpm start:dev
+Пример `.env`:
+```
+API_ID=...
+API_HASH=...
+CHANNEL_USERNAME=...
+PHONE_NUMBER=...
+TWO_FACTOR_PASSWORD=... # если есть
 ```
 
-## Authorization
+## Работа приложения
 
-Upon starting the application, you'll be prompted to enter your phone number and then the authorization code sent to your Telegram app.
+После авторизации приложение начнет загрузку сообщений из указанного канала и будет:
+1. Выводить их в консоль в формате:
+   ```
+   ----- Сообщение #123456 (01.01.2023, 12:00:00) -----
+   Текст: Текст сообщения
+   Медиа: Photo
+   ----------------------------------------
+   ```
+2. Сохранять их в файл `output/messages.json` (единый для всех каналов и запусков).
 
-## Shutdown
+**Формат файла:**
 
-To shut down the application:
+JSON-файл содержит только массив сообщений, без дополнительных полей:
+```json
+[
+  {
+    "id": 123456,
+    "date": 1672531200,
+    "text": "Текст сообщения",
+    "media": "Photo",
+    "heading": "Заголовок",
+    "tags": ["tag1", "tag2"],
+    "photoPath": "output/photos/photo_123456.jpg"
+  },
+  // ... другие сообщения
+]
+```
+- Если сообщение с таким id уже есть, его текст обновляется.
+- Новые сообщения добавляются.
+- Все сообщения в файле отсортированы по date от позднего к раннему (сначала самые новые).
 
-- Use CTRL + C in the terminal.
-- Stop the database with `pnpm db:stop`.
+## Завершение работы
 
-## Database
-
-The first time you start the application, MongoDB will run in a Docker container, and its volume will be created in the root directory of the repository. This volume is persistent across application restarts.
-
-To connect to the database from another application, use the following connection string:
-`mongodb://root:toor@localhost:27017/myDatabase?authSource=admin&directConnection=true&replicaSet=rs0`
-
-To review the database records, you can use Prisma Studio. Start it by executing `pnpm prisma:studio` from the terminal (run the command from the root directory of the repository).
+Для завершения работы приложения:
+- Используйте CTRL + C в терминале.
 
 ## FAQ
 
-### How to get channel data by `channelId`
+### Как получить данные канала по `channelId`
 
-> May not work for some channels
+> Может не работать для некоторых каналов
 
 ```typescript
 const channel = await client.getEntity(`-100${channelId}`)
 ```
 
-### How to get channel by `channelName`
+### Как получить канал по `channelName`
 
 ```typescript
 const channels = await client.invoke(
@@ -71,3 +86,27 @@ const channels = await client.invoke(
   }),
 );
 ```
+
+### Почему бот не получает историю сообщений?
+
+Боты в Telegram имеют ограниченный доступ к сообщениям. Они могут получать только:
+1. Новые сообщения, отправленные после добавления бота в канал
+2. Сообщения, к которым бот имеет прямой доступ согласно правам
+3. События и обновления, на которые бот подписан
+
+Для получения полной истории сообщений канала используйте авторизацию через пользовательский аккаунт.
+
+### Как использовать библиотеку GramJS напрямую?
+
+Это приложение построено на библиотеке GramJS (npm пакет `telegram`). Если вы хотите использовать API напрямую, можно вызывать методы через функцию `invoke`:
+
+```typescript
+const result = await client.invoke(
+  new Api.ИмяМетода({
+    параметр1: значение1,
+    параметр2: значение2,
+  }),
+);
+```
+
+Полный список доступных методов можно найти в [документации Telegram API](https://core.telegram.org/methods).

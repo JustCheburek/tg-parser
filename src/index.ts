@@ -1,90 +1,82 @@
 /* eslint-disable @typescript-eslint/require-await */
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions/index.js';
-import { apiId, apiHash } from './config.js';
-import { getSession, saveSession } from './db/session.js';
-import { prisma } from './db/index.js';
+import { apiId, apiHash, channelUsername, phoneNumber, twoFactorPassword, savedSession } from './config.js';
 import { fetchAllMessages } from './api/messages.js';
-import { prompt } from './utils/input.js';
-import { createLogger } from './utils/logger.js';
 
-const logger = createLogger('ParserMain');
+/**
+ * Получает сохраненную сессию из .env файла
+ */
+const getSessionFromEnv = async (): Promise<string> => {
+  return savedSession || '';
+};
 
 /**
  * The main function orchestrates the setup and execution of the Telegram client,
  * handles user authentication, and triggers the message fetching process.
  */
 const main = async (): Promise<void> => {
-  logger.trace('Starting...');
+  console.log('TG Parser запущен');
+  console.log(`Будут загружены сообщения из канала: @${channelUsername}`);
 
   // Initialize the Telegram client with a saved session, if available
-  const stringSession = new StringSession(await getSession());
+  const stringSession = new StringSession(await getSessionFromEnv());
 
-  const client = new TelegramClient(stringSession, apiId, apiHash, {
+  const client: TelegramClient = new TelegramClient(stringSession, apiId, apiHash, {
     connectionRetries: 5,
   });
 
   try {
-    // Attempt to connect the client to Telegram
     await client.connect();
-
-    // Verify that the user is authorized; if not, throw an error
-    if (!(await client.isUserAuthorized())) {
-      throw new Error('Session is not valid or expired');
-    }
-  } catch (err) {
-    // Handle connection and authorization errors
-    logger.error(
-      'Login required:',
-      (err as Error).message ?? 'Unknown connection error',
-    );
-
-    // Prompt the user for login details and attempt to start a new session
-    await client.start({
-      phoneNumber: () => prompt('Enter your phone number: '),
-      phoneCode: () => prompt('Enter code: '),
-      onError: (err: Error) => logger.error(err),
-    });
-    logger.trace('Successfully logged in.');
+    // await client.start({
+    //   phoneNumber: async () => phoneNumber || '',
+    //   password: async () => twoFactorPassword || '',
+    //   phoneCode: async () => await prompt('Введите код авторизации из Telegram: '),
+    //   onError: (err: Error) => {
+    //     console.log(`Ошибка авторизации: ${err.message}`);
+    //     throw err;
+    //   },
+    // });
+    console.log('Пользователь успешно авторизован!');
+  } catch (error) {
+    console.log(`\n❌ Не удалось авторизоваться: ${(error as Error).message}`);
+    await client.disconnect();
+    return;
   }
 
-  // Save the session string for future connections
-  await saveSession(stringSession.save());
-  logger.trace('Session updated.');
-
-  // Proceed to fetch all messages from the configured Telegram channel
   await fetchAllMessages(client);
-
-  // Disconnect the client
   await client.disconnect();
+  console.log('Завершение работы приложения...');
 };
 
 /**
- * Handles graceful shutdown of the application, ensuring that the Prisma client disconnects properly.
+ * Handles graceful shutdown of the application
  *
  * @param {boolean} [isError=false] - Indicates if the shutdown is due to an error.
  */
 const shutdown = (isError: boolean = false) => {
-  const stopHandler = async () => {
-    await prisma.$disconnect(); // Ensure Prisma client disconnects
-  };
-  stopHandler()
-    .catch(logger.error)
-    .finally(() => process.exit(isError ? 1 : 0)); // Exit the process, indicating error if any
+  console.log('Завершение работы приложения...');
+  process.exit(isError ? 1 : 0); // Exit the process, indicating error if any
 };
 
 // Register event listeners for graceful shutdown and unhandled rejections
 process.once('SIGTERM', () => shutdown());
 process.once('SIGINT', () => shutdown());
 process.once('unhandledRejection', (error) => {
-  logger.error('🛸 Unhandled rejection', error);
+  console.log(`\n❌ Необработанная ошибка: ${(error as Error)?.message || 'Неизвестная ошибка'}`);
   shutdown(true);
 });
 
-// Execute the main function and handle errors
-main()
-  .then(() => shutdown())
-  .catch((error) => {
-    logger.error('🚨 Internal application error', error);
+if (process.env.NODE_ENV === 'api') {
+  // Только API
+  import('./api/index.js');
+} else {
+  // Парсер
+  (async () => {
+    await main();
+    shutdown();
+  })().catch((error) => {
+    console.log(`\n❌ Внутренняя ошибка приложения: ${(error as Error)?.message || 'Неизвестная ошибка'}`);
     shutdown(true);
   });
+}
