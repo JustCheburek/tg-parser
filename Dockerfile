@@ -19,5 +19,5 @@ RUN bun run build
 # Открываем порт для API
 EXPOSE 3000
 
-# Запуск API
-CMD ["bun", "run", "api"] 
+ENV NODE_ENV=api
+CMD ["node", "dist/index.js"] 
