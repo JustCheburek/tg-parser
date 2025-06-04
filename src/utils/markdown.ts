@@ -21,6 +21,14 @@ interface MessageEntity {
 }
 
 /**
+ * Экранирует спецсимволы внутри URL для Markdown, не трогая внешнее форматирование
+ */
+function safeMarkdownUrl(url: string): string {
+  // Заменяем только ** внутри URL на %2A%2A (или * *)
+  return url.replace(/\*\*/g, '%2A%2A');
+}
+
+/**
  * Преобразует сущности Telegram в Markdown-разметку
  * @param {string} text - Исходный текст сообщения
  * @param {Api.TypeMessageEntity[] | undefined} entities - Массив сущностей Telegram
@@ -30,13 +38,31 @@ export function convertEntitiesToMarkdown(text: string, entities?: Api.TypeMessa
   if (!text) return '';
   if (!entities || entities.length === 0) return text;
   
-  // Сортируем сущности по смещению (от меньшего к большему) и по длине (от большего к меньшему)
-  // Это позволит сначала обработать более крупные сущности, а потом более мелкие
-  const sortedEntities = [...entities].sort((a, b) => {
-    if (a.offset !== b.offset) {
-      return a.offset - b.offset; // Сначала по смещению (от меньшего к большему)
+  // Копируем сущности, чтобы не мутировать исходные
+  let entitiesCopy = [...entities];
+  
+  // 1. Ищем пары text_url + bold с одинаковым диапазоном
+  for (let i = 0; i < entitiesCopy.length; i++) {
+    const e1 = entitiesCopy[i];
+    if (e1.className === 'MessageEntityTextUrl' || e1.className === 'MessageEntityUrl') {
+      for (let j = 0; j < entitiesCopy.length; j++) {
+        if (i === j) continue;
+        const e2 = entitiesCopy[j];
+        if (e2.className === 'MessageEntityBold' && e1.offset === e2.offset && e1.length === e2.length) {
+          // Помечаем жирность как вложенную
+          (e1 as any)._wrapBold = true;
+          // Удаляем жирность из списка, чтобы не дублировать
+          entitiesCopy = entitiesCopy.filter((_, idx) => idx !== j);
+          break;
+        }
+      }
     }
-    return b.length - a.length; // При одинаковом смещении - по длине (от большего к меньшему)
+  }
+  
+  // Сортируем сущности по смещению (от меньшего к большему) и по длине (от большего к меньшему)
+  const sortedEntities = [...entitiesCopy].sort((a, b) => {
+    if (a.offset !== b.offset) return a.offset - b.offset;
+    return b.length - a.length;
   });
   
   // Создаем копию текста для Markdown
@@ -84,13 +110,23 @@ export function convertEntitiesToMarkdown(text: string, entities?: Api.TypeMessa
         offset += 4; // __...__
         break;
       case 'MessageEntityUrl':
-        replacement = `[${fragment}](${fragment})`;
-        offset += fragment.length + 4; // [...](...)
+        if ((entity as any)._wrapBold) {
+          replacement = `[**${fragment}**](${fragment})`;
+          offset += fragment.length + 8; // [**...**](...)
+        } else {
+          replacement = `[${fragment}](${fragment})`;
+          offset += fragment.length + 4;
+        }
         break;
       case 'MessageEntityTextUrl':
         const url = (entity as Api.MessageEntityTextUrl).url;
-        replacement = `[${fragment}](${url})`;
-        offset += url.length + 4; // [...](...)
+        if ((entity as any)._wrapBold) {
+          replacement = `[**${fragment}**](${url})`;
+          offset += url.length + 8;
+        } else {
+          replacement = `[${fragment}](${url})`;
+          offset += url.length + 4;
+        }
         break;
       case 'MessageEntityMention':
         replacement = `[${fragment}](https://t.me/${fragment.substring(1)})`;
