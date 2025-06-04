@@ -20,7 +20,6 @@ interface SimpleMessage {
   id: number;
   date: number;
   text: string | null;
-  markdown: string | null; // Исходный текст с Markdown
   media: string;
   photoPath?: string;
   heading: string | null;
@@ -91,19 +90,15 @@ const messageToJsonObject = (message: Api.Message, photoPath?: string): SimpleMe
   const tags = extractTags(msgText);
   
   // Преобразуем сущности в Markdown, если они есть (для полного текста)
-  const fullMarkdown = msgText ? convertEntitiesToMarkdown(msgText, message.entities) : null;
-  
-  // Извлекаем текст без заголовка и тегов
-  const body = extractBodyText(msgText);
+  const fullText = msgText ? convertEntitiesToMarkdown(msgText, message.entities) : null;
   
   // Извлекаем markdown без заголовка и тегов
-  const markdown = fullMarkdown ? extractBodyText(fullMarkdown) : null;
+  const text = fullText ? extractBodyText(fullText) : null;
   
   const obj: any = {
     id: msgId,
     date: date,
-    text: body, // Текст без заголовка и тегов
-    markdown: markdown, // Markdown без заголовка и тегов
+    text,
     media: mediaType,
     heading,
     tags
@@ -159,7 +154,6 @@ const writeMessagesToFile = async (filePath: string, messages: Api.Message[], cl
     const obj = messageToJsonObject(message, photoPath);
     if (idMap.has(obj.id)) {
       idMap.get(obj.id)!.text = obj.text;
-      idMap.get(obj.id)!.markdown = obj.markdown;
       if (photoPath) idMap.get(obj.id)!.photoPath = photoPath;
     } else {
       idMap.set(obj.id, obj);
