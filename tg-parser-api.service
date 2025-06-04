@@ -1,0 +1,17 @@
+[Unit]
+Description=Telegram Parser API Service
+After=network.target
+
+[Service]
+Type=simple
+User=zi
+WorkingDirectory=/home/zi/tg-parser
+ExecStart=/home/zi/.bun/bin/bun run api
+Restart=on-failure
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=tg-parser-api
+
+[Install]
+WantedBy=multi-user.target 
