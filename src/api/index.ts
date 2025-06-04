@@ -1,10 +1,23 @@
 import express, { Request, Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
+import cors from 'cors';
 import { getEnvVar } from '../utils/env.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
+
+// Настройка CORS с расширенными опциями
+const corsOptions = {
+  origin: '*', // Разрешаем доступ с любого источника
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+  credentials: true
+};
+
+// Подключаем CORS middleware
+app.use(cors(corsOptions));
 
 // Отладочная информация
 console.log('Текущая рабочая директория:', process.cwd());

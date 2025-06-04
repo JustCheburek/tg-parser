@@ -18,6 +18,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",
+    "@types/cors": "^2.8.18",
     "@types/debug": "^4.1.12",
     "@types/express": "^5.0.2",
     "@types/node": "^22.15.29",
@@ -33,6 +34,7 @@
     "typescript-eslint": "^8.33.1"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "debug": "^4.4.1",
     "dotenv": "16.4.5",
     "express": "^4.21.2",
