@@ -13,10 +13,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "prettier --ignore-path ./.lintignore . '!data' --check && eslint . --ext .ts --ignore-path ./.lintignore",
     "lint:fix": "prettier --ignore-path ./.lintignore --write . '!data' --check && eslint . --ext .ts --ignore-path ./.lintignore --fix",
-    "build": "tsup",
-    "start": "tsx src/index.ts",
-    "start:dev": "node --experimental-specifier-resolution=node --loader ts-node/esm src/index.ts",
-    "api": "NODE_ENV=api tsx src/index.ts"
+    "start": "bun src/index.ts",
+    "api": "NODE_ENV=api bun src/index.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",
@@ -31,7 +29,6 @@
     "globals": "^16.2.0",
     "prettier": "^3.5.3",
     "ts-node": "^10.9.2",
-    "tsup": "^8.5.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.33.1"
   },
@@ -39,7 +36,6 @@
     "debug": "^4.4.1",
     "dotenv": "16.4.5",
     "express": "^4.21.2",
-    "telegram": "^2.26.22",
-    "tsx": "^4.19.4"
+    "telegram": "^2.26.22"
   }
 }

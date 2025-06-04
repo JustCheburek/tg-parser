@@ -13,11 +13,8 @@ RUN bun install
 # Копируем исходники
 COPY . .
 
-# Собираем проект (если нужно)
-RUN bun run build
-
 # Открываем порт для API
 EXPOSE 3000
 
 ENV NODE_ENV=api
-CMD ["node", "dist/index.js"] 
+CMD ["bun", "src/index.ts"] 

@@ -19,5 +19,5 @@
     "importsNotUsedAsValues": "remove",
     "noImplicitReturns": true
   },
-  "include": ["src", "tsup.config.ts"]
+  "include": ["src"]
 }
