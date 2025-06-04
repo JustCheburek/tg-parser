@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getEnvVar } from '../utils/env.js';
@@ -46,7 +46,8 @@ function processMessages(messages: any[]) {
   });
 }
 
-// Маршрут для получения всех сообщений
+// Маршрут для получения всех сообщений с поддержкой пагинации
+// Пример: /?offset=0&limit=100
 app.get('/', (req, res) => {
   if (!fs.existsSync(MESSAGES_FILE)) {
     return res.status(404).json({ error: 'messages.json не найден' });
@@ -54,14 +55,26 @@ app.get('/', (req, res) => {
   const data = fs.readFileSync(MESSAGES_FILE, 'utf8');
   try {
     const messages = JSON.parse(data);
-    res.json(processMessages(messages));
+    const processed = processMessages(messages);
+    // Параметры пагинации
+    const offset = Number(req.query.offset) || 0;
+    const limit = req.query.limit !== undefined ? Number(req.query.limit) : undefined;
+    let result = processed;
+    if (!isNaN(offset) && limit !== undefined && !isNaN(limit)) {
+      result = processed.slice(offset, offset + limit);
+    } else if (!isNaN(offset) && offset > 0) {
+      result = processed.slice(offset);
+    } else if (limit !== undefined && !isNaN(limit)) {
+      result = processed.slice(0, limit);
+    }
+    res.json(result);
   } catch (e) {
     res.status(500).json({ error: 'Invalid JSON' });
   }
 });
 
 // Получение фотографии по ID сообщения
-app.get('/photo/:id', (req, res) => {
+app.get('/photo/:id', (req: Request, res: Response) => {
   const messageId = req.params.id;
   const photoPath = path.join(PHOTOS_DIR, `photo_${messageId}.jpg`);
   
@@ -73,7 +86,7 @@ app.get('/photo/:id', (req, res) => {
 });
 
 // Маршрут для проверки состояния API
-app.get('/health', (req, res) => {
+app.get('/health', (req: Request, res: Response) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
