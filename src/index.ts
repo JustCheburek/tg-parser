@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/require-await */
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions/index.js';
-import { apiId, apiHash, channelUsername, phoneNumber, twoFactorPassword, savedSession } from './config.js';
-import { fetchAllMessages } from './api/messages.js';
+import { apiId, apiHash, channelUsername, savedSession } from './config';
+import { fetchAllMessages } from './api/messages';
+import * as path from 'path';
 
 /**
  * Получает сохраненную сессию из .env файла
@@ -46,6 +47,7 @@ const main = async (): Promise<void> => {
 
   await fetchAllMessages(client);
   await client.disconnect();
+  
   console.log('Завершение работы приложения...');
 };
 

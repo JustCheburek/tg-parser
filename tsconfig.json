@@ -3,8 +3,8 @@
     "strict": true,
     "lib": ["ES2022"],
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "checkJs": true,
@@ -16,7 +16,6 @@
     "noErrorTruncation": true,
     "forceConsistentCasingInFileNames": true,
     "useUnknownInCatchVariables": true,
-    "importsNotUsedAsValues": "remove",
     "noImplicitReturns": true
   },
   "include": ["src"]

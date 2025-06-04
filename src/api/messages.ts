@@ -7,6 +7,7 @@ import {
 } from '../config.js';
 import * as fs from 'fs';
 import * as path from 'path';
+import { convertEntitiesToMarkdown } from '../utils/markdown';
 
 const MESSAGES_FILE = path.resolve(process.cwd(), 'output', 'messages.json');
 const PHOTOS_DIR = path.resolve(process.cwd(), 'output', 'photos');
@@ -19,6 +20,7 @@ interface SimpleMessage {
   id: number;
   date: number;
   text: string | null;
+  markdown: string | null; // Исходный текст с Markdown
   media: string;
   photoPath?: string;
   heading: string | null;
@@ -40,12 +42,33 @@ function extractTags(text: string | null): string[] {
   return (lastLine.match(/#([^\s#]+)/g) || []).map(tag => tag.slice(1));
 }
 
+/**
+ * Извлекает текст сообщения без заголовка и тегов
+ * @param {string | null} text - Исходный текст сообщения
+ * @returns {string | null} Текст без заголовка и тегов
+ */
 function extractBodyText(text: string | null): string | null {
   if (!text) return null;
+  
   const lines = text.split(/\r?\n/);
-  if (lines.length <= 2) return null;
-  // Убираем первую и последнюю строку
-  const body = lines.slice(1, -1).join('\n').trim();
+  if (lines.length <= 1) return text; // Если только одна строка, возвращаем весь текст
+  
+  // Удаляем первую строку (заголовок)
+  let bodyLines = lines.slice(1);
+  
+  // Проверяем, есть ли теги в последней строке
+  const lastLine = bodyLines[bodyLines.length - 1];
+  if (lastLine && (
+    lastLine.includes('#') || 
+    /^#\*\*\w+\*\*/.test(lastLine) || 
+    /^#\[\w+\]/.test(lastLine)
+  )) {
+    // Если в последней строке есть хештеги (обычные или с Markdown-разметкой), удаляем её
+    bodyLines = bodyLines.slice(0, -1);
+  }
+  
+  // Собираем текст обратно
+  const body = bodyLines.join('\n').trim();
   return body === '' ? null : body;
 }
 
@@ -62,14 +85,25 @@ const messageToJsonObject = (message: Api.Message, photoPath?: string): SimpleMe
   if (message.media) {
     mediaType = message.media.className.replace('MessageMedia', '');
   }
+  
+  // Извлекаем заголовок и теги
   const heading = extractHeading(msgText);
   const tags = extractTags(msgText);
+  
+  // Преобразуем сущности в Markdown, если они есть (для полного текста)
+  const fullMarkdown = msgText ? convertEntitiesToMarkdown(msgText, message.entities) : null;
+  
+  // Извлекаем текст без заголовка и тегов
   const body = extractBodyText(msgText);
+  
+  // Извлекаем markdown без заголовка и тегов
+  const markdown = fullMarkdown ? extractBodyText(fullMarkdown) : null;
   
   const obj: any = {
     id: msgId,
     date: date,
-    text: body,
+    text: body, // Текст без заголовка и тегов
+    markdown: markdown, // Markdown без заголовка и тегов
     media: mediaType,
     heading,
     tags
@@ -125,6 +159,7 @@ const writeMessagesToFile = async (filePath: string, messages: Api.Message[], cl
     const obj = messageToJsonObject(message, photoPath);
     if (idMap.has(obj.id)) {
       idMap.get(obj.id)!.text = obj.text;
+      idMap.get(obj.id)!.markdown = obj.markdown;
       if (photoPath) idMap.get(obj.id)!.photoPath = photoPath;
     } else {
       idMap.set(obj.id, obj);
