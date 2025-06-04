@@ -10,11 +10,17 @@ COPY package.json bun.lock* tsconfig.json ./
 # Устанавливаем зависимости
 RUN bun install
 
+# Создаем директорию для выходных данных
+RUN mkdir -p /app/output/photos
+
 # Копируем исходники
 COPY . .
 
 # Открываем порт для API
 EXPOSE 3000
 
+# Устанавливаем переменные окружения
 ENV NODE_ENV=api
+
+# Запускаем API сервер
 CMD ["bun", "src/index.ts"] 

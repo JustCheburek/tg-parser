@@ -9,13 +9,26 @@ const PORT = Number(process.env.PORT || 3000);
 // Отладочная информация
 console.log('Текущая рабочая директория:', process.cwd());
 
-// Файл с сообщениями (абсолютный путь)
-const MESSAGES_FILE = '/home/zi/tg-parser/output/messages.json';
+// Определяем пути к файлам относительно текущей директории
+const MESSAGES_FILE = path.resolve(process.cwd(), 'output', 'messages.json');
 console.log('Путь к файлу с сообщениями:', MESSAGES_FILE);
 console.log('Существует ли файл:', fs.existsSync(MESSAGES_FILE));
 
 // Директория с фотографиями
 const PHOTOS_DIR = path.resolve(process.cwd(), 'output', 'photos');
+console.log('Путь к директории с фотографиями:', PHOTOS_DIR);
+console.log('Существует ли директория:', fs.existsSync(PHOTOS_DIR));
+
+// Создаем директории, если они не существуют
+if (!fs.existsSync(path.resolve(process.cwd(), 'output'))) {
+  fs.mkdirSync(path.resolve(process.cwd(), 'output'), { recursive: true });
+  console.log('Создана директория output');
+}
+
+if (!fs.existsSync(PHOTOS_DIR)) {
+  fs.mkdirSync(PHOTOS_DIR, { recursive: true });
+  console.log('Создана директория photos');
+}
 
 // Базовый URL API (с завершающим слешем)
 const API_BASE_URL = getEnvVar('API_BASE_URL', 'string', false) || 
@@ -57,6 +70,19 @@ app.get('/photo/:id', (req, res) => {
   }
   
   res.sendFile(photoPath);
+});
+
+// Маршрут для проверки состояния API
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    filesystemCheck: {
+      outputDirExists: fs.existsSync(path.resolve(process.cwd(), 'output')),
+      photosDirExists: fs.existsSync(PHOTOS_DIR),
+      messagesFileExists: fs.existsSync(MESSAGES_FILE)
+    }
+  });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
