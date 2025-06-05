@@ -47,38 +47,25 @@ if (!fs.existsSync(PHOTOS_DIR)) {
 const API_BASE_URL = getEnvVar('API_BASE_URL', 'string', false) || 
   `http://localhost:${PORT}/`;
 
-// Добавляем URL к фотографиям для внешнего доступа
-function processMessages(messages: any[]) {
-  return messages.map(message => {
-    if (message.photoPath) {
-      // Формируем URL для доступа к фото извне
-      const photoId = path.basename(message.photoPath).replace('photo_', '').replace('.jpg', '');
-      message.photoUrl = `${API_BASE_URL}photo/${photoId}`;
-    }
-    return message;
-  });
-}
-
 // Маршрут для получения всех сообщений с поддержкой пагинации
 // Пример: /?offset=0&limit=100
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
   if (!fs.existsSync(MESSAGES_FILE)) {
     return res.status(404).json({ error: 'messages.json не найден' });
   }
   const data = fs.readFileSync(MESSAGES_FILE, 'utf8');
   try {
     const messages = JSON.parse(data);
-    const processed = processMessages(messages);
     // Параметры пагинации
     const offset = Number(req.query.offset) || 0;
     const limit = req.query.limit !== undefined ? Number(req.query.limit) : undefined;
-    let result = processed;
+    let result = messages;
     if (!isNaN(offset) && limit !== undefined && !isNaN(limit)) {
-      result = processed.slice(offset, offset + limit);
+      result = messages.slice(offset, offset + limit);
     } else if (!isNaN(offset) && offset > 0) {
-      result = processed.slice(offset);
+      result = messages.slice(offset);
     } else if (limit !== undefined && !isNaN(limit)) {
-      result = processed.slice(0, limit);
+      result = messages.slice(0, limit);
     }
     res.json(result);
   } catch (e) {

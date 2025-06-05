@@ -8,12 +8,17 @@ import {
 import * as fs from 'fs';
 import * as path from 'path';
 import { convertEntitiesToMarkdown } from '../utils/markdown';
+import { getEnvVar } from '../utils/env.js';
 
 const MESSAGES_FILE = path.resolve(process.cwd(), 'output', 'messages.json');
 const PHOTOS_DIR = path.resolve(process.cwd(), 'output', 'photos');
 if (!fs.existsSync(PHOTOS_DIR)) {
   fs.mkdirSync(PHOTOS_DIR, { recursive: true });
 }
+
+// Базовый URL API (с завершающим слешем)
+const API_BASE_URL = getEnvVar('API_BASE_URL', 'string', false) || 
+  `http://localhost:${process.env.PORT || 3000}/`;
 
 // Тип для сообщения, сохраняемого в JSON
 interface SimpleMessage {
@@ -22,6 +27,7 @@ interface SimpleMessage {
   text: string | null;
   media: string;
   photoPath?: string;
+  photoUrl?: string;
   heading: string | null;
   tags: string[];
 }
@@ -127,6 +133,22 @@ const createMessageFile = (_channelName: string): string => {
 };
 
 /**
+ * Добавляет URL к фотографиям для внешнего доступа
+ * @param {SimpleMessage[]} messages - Массив сообщений
+ * @returns {SimpleMessage[]} Массив сообщений с добавленными URL для фото
+ */
+function processMessages(messages: SimpleMessage[]): SimpleMessage[] {
+  return messages.map(message => {
+    if (message.photoPath) {
+      // Формируем URL для доступа к фото извне
+      const photoId = path.basename(message.photoPath).replace('photo_', '').replace('.jpg', '');
+      message.photoUrl = `${API_BASE_URL}photo/${photoId}`;
+    }
+    return message;
+  });
+}
+
+/**
  * Записывает сообщения в JSON-файл (уникальность по id, обновление text, сортировка по date)
  * @param {string} filePath - Путь к файлу
  * @param {Api.Message[]} messages - Массив сообщений для записи
@@ -160,7 +182,9 @@ const writeMessagesToFile = async (filePath: string, messages: Api.Message[], cl
     }
   }
   const result = Array.from(idMap.values()).sort((a, b) => b.date - a.date);
-  fs.writeFileSync(filePath, JSON.stringify(result, null, 2), { encoding: 'utf8' });
+  // Обрабатываем сообщения, добавляя URL для фотографий
+  const processedResult = processMessages(result);
+  fs.writeFileSync(filePath, JSON.stringify(processedResult, null, 2), { encoding: 'utf8' });
 };
 
 // --- MINIAPP: скачивание фото через GramJS ---
