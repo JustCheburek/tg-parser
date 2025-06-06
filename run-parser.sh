@@ -5,6 +5,11 @@ export PATH="$HOME/.bun/bin:$PATH"
 PROJECT_DIR="/home/zi/tg-parser"
 LOG_FILE="$PROJECT_DIR/parser-cron.log"
 
+# Удаляем лог, если ему больше 1 дня
+if [ -f "$LOG_FILE" ]; then
+  find "$LOG_FILE" -mtime +0 -delete
+fi
+
 # Логируем начало выполнения
 echo "-----------------------------------" >> $LOG_FILE
 echo "Запуск парсера: $(date)" >> $LOG_FILE
