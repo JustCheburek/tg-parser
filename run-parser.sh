@@ -1,4 +1,5 @@
 #!/bin/bash
+export PATH="$HOME/.bun/bin:$PATH"
 
 # Директория проекта
 PROJECT_DIR="/home/zi/tg-parser"
@@ -32,4 +33,4 @@ else
   echo "ОШИБКА: Парсер завершился с кодом $RESULT: $(date)" >> $LOG_FILE
 fi
 
-echo "-----------------------------------" >> $LOG_FILE 
+echo "-----------------------------------" >> $LOG_FILE
