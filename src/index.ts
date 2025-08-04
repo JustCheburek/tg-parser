@@ -23,9 +23,14 @@ const main = async (): Promise<void> => {
   // Initialize the Telegram client with a saved session, if available
   const stringSession = new StringSession(await getSessionFromEnv());
 
-  const client: TelegramClient = new TelegramClient(stringSession, apiId, apiHash, {
-    connectionRetries: 5,
-  });
+  const client: TelegramClient = new TelegramClient(
+    stringSession,
+    apiId,
+    apiHash,
+    {
+      connectionRetries: 5,
+    },
+  );
 
   try {
     await client.connect();
@@ -47,7 +52,7 @@ const main = async (): Promise<void> => {
 
   await fetchAllMessages(client);
   await client.disconnect();
-  
+
   console.log('Завершение работы приложения...');
 };
 
@@ -65,20 +70,19 @@ const shutdown = (isError: boolean = false) => {
 process.once('SIGTERM', () => shutdown());
 process.once('SIGINT', () => shutdown());
 process.once('unhandledRejection', (error) => {
-  console.log(`\n❌ Необработанная ошибка: ${(error as Error)?.message || 'Неизвестная ошибка'}`);
+  console.log(
+    `\n❌ Необработанная ошибка: ${(error as Error)?.message || 'Неизвестная ошибка'}`,
+  );
   shutdown(true);
 });
 
-if (process.env.NODE_ENV === 'api') {
-  // Только API
-  import('./api/index.js');
-} else {
-  // Парсер
-  (async () => {
-    await main();
-    shutdown();
-  })().catch((error) => {
-    console.log(`\n❌ Внутренняя ошибка приложения: ${(error as Error)?.message || 'Неизвестная ошибка'}`);
-    shutdown(true);
-  });
-}
+// Парсер
+(async () => {
+  await main();
+  shutdown();
+})().catch((error) => {
+  console.log(
+    `\n❌ Внутренняя ошибка приложения: ${(error as Error)?.message || 'Неизвестная ошибка'}`,
+  );
+  shutdown(true);
+});
